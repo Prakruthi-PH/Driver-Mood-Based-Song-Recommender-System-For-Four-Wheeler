@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(195, 188, 188, 0.1);
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        .form-container {
+            margin-top: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            display: none;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            display: none;
+        }
+        audio {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Driver Mood Based Song Recommender System For Four Wheeler</h1>
+
+        <div class="form-container">
+            <form action="/upload" method="POST" enctype="multipart/form-data" id="upload-form">
+                <label for="image">Upload an Image (Face required):</label>
+                <input type="file" name="image" id="image" accept="image/*" required>
+                <div class="error-message" id="error-message">Please select a valid image file.</div>
+                <br>
+                <button type="submit">Submit Image</button>
+            </form>
+        </div>
+
+        <div id="result">
+            <h2>Detected Emotion: <span id="emotion-text"></span></h2>
+            <audio id="song-player" controls>
+                <source id="song-src" src="" type="audio/mp3">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("upload-form");
+        const errorMessage = document.getElementById("error-message");
+        const resultContainer = document.getElementById("result");
+        const emotionText = document.getElementById("emotion-text");
+        const songPlayer = document.getElementById("song-player");
+        const songSrc = document.getElementById("song-src");
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            resultContainer.style.display = "none";
+            errorMessage.style.display = "none";
+
+            const formData = new FormData(form);
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+                errorMessage.textContent = result.error;
+                errorMessage.style.display = "block";
+                return;
+            }
+
+            // Update emotion text
+            emotionText.textContent = result.emotion;
+
+            // Check if a song was returned and set it to the audio player
+            if (result.song) {
+                songPlayer.style.display = "block"; // Show the audio player
+                songSrc.src = result.song; // Set the song source
+                songPlayer.load(); // Reload the audio player with the new source
+                songPlayer.play(); // Start playing the song
+            } else {
+                songPlayer.style.display = "none"; // Hide the audio player if no song is found
+            }
+
+            resultContainer.style.display = "block"; // Show the result container
+        });
+    </script>
+</body>
+</html>
